@@ -1,0 +1,52 @@
+WORKON_HOME=~/.virtualenvs
+
+# Virtualenv support if installed
+if command -v virtualenvwrapper.sh > /dev/null; then 
+    source virtualenvwrapper.sh
+    alias git-new-workdir=/usr/share/git/workdir/git-new-workdir
+
+    function virtual_env_prompt () {
+        REPLY=${VIRTUAL_ENV+(${VIRTUAL_ENV:t}) }
+    }
+    grml_theme_add_token  virtual-env -f virtual_env_prompt '%F{magenta}' '%f'
+    zstyle ':prompt:grml:left:setup' items rc virtual-env change-root user at host path vcs percent
+fi
+
+# define up as update and clear unused pacakges for ArchLinux with yaourt
+if command -v yaourt > /dev/null; then
+    up() {
+        yaourt -Syu && yaourt -Qdt
+    }
+    down() {
+        yaourt -Syuw
+    }
+fi
+
+#define rankmirrors helper
+if command -v rankmirrors > /dev/null; then
+    gen_mirrorlist() {
+        sudo sed -i 's/^#Server/Server/' /etc/pacman.d/mirrorlist.pacnew; rankmirrors -n 6 /etc/pacman.d/mirrorlist.pacnew | sudo /bin/bash -c 'tee /etc/pacman.d/mirrorlist'
+    }
+fi
+
+#define xdg-open for cygwin
+if command -v cygstart > /dev/null; then
+    alias xdg-open="cygstart"
+fi
+
+#unalias ag - I want the silversearcher-ag
+if [ -e /usr/bin/ag ]; then
+    unalias ag > /dev/null 2>&1
+fi
+
+#teach windows to do a linux-like continuous ping when in cygwin
+if [ -e "/cygdrive/" ]; then
+    alias ping="PING -t"
+fi
+
+#add a manuall killall, if not avialable
+if ! command -v killall > /dev/null; then
+    killall() {
+        ps -W | grep $1 | awk '{print $1}' | while read line; do echo $line | xargs kill -f; done;
+    }
+fi
